@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Particle Universe — Hand Controlled</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif;color:#fff;touch-action:none}
+#c{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:1}
+#wc{position:fixed;bottom:20px;left:20px;z-index:100;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);box-shadow:0 4px 24px rgba(0,0,0,0.7);display:none}
+#wv{width:160px;height:120px;object-fit:cover;display:block;transform:scaleX(-1)}
+#hc{position:absolute;top:0;left:0;width:160px;height:120px;transform:scaleX(-1);pointer-events:none}
+#gl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.75);font-size:10px;text-align:center;padding:3px 6px;color:rgba(255,255,255,0.85);backdrop-filter:blur(4px);letter-spacing:.3px}
+#panel{position:fixed;top:20px;right:20px;z-index:100;width:210px;background:rgba(8,8,18,0.75);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:14px;box-shadow:0 8px 40px rgba(0,0,0,0.6)}
+.pt{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.cr{margin-bottom:11px}
+.cl{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:5px}
+.cl span{color:rgba(255,255,255,0.9);font-weight:500}
+input[type=range]{width:100%;-webkit-appearance:none;height:2px;border-radius:2px;background:rgba(255,255,255,0.12);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#60a5fa);cursor:pointer;box-shadow:0 0 6px rgba(167,139,250,0.7)}
+.tg{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:2px}
+.tb{width:100%;aspect-ratio:1;border-radius:7px;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
+.tb:hover{transform:scale(1.12)}
+.tb.active{border-color:rgba(255,255,255,0.85)}
+.fb{display:flex;justify-content:space-between;align-items:center;padding:5px 9px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:10px;color:rgba(255,255,255,0.4);margin-top:8px}
+.fv{font-size:12px;font-weight:600;color:#4ade80}
+#tp{position:fixed;bottom:20px;right:20px;z-index:100;background:rgba(8,8,18,0.75);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6);max-width:340px}
+.tg2{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.tmb{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:11px;padding:7px 3px;cursor:pointer;text-align:center;font-size:17px;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tmb:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);transform:scale(1.06)}
+.tmb.active{background:rgba(167,139,250,0.2);border-color:rgba(167,139,250,0.5);box-shadow:0 0 10px rgba(167,139,250,0.3)}
+.tmb span{font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:.2px}
+#gh{position:fixed;top:50%;left:18px;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:7px}
+.gh{background:rgba(8,8,18,0.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.06);border-radius:9px;padding:6px 9px;font-size:9px;color:rgba(255,255,255,0.35);display:flex;align-items:center;gap:7px;transition:all .2s}
+.gh.on{color:rgba(255,255,255,0.95);border-color:rgba(167,139,250,0.5);background:rgba(167,139,250,0.18);box-shadow:0 0 12px rgba(167,139,250,0.25)}
+.ghi{font-size:13px}
+#fsbtn{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(8,8,18,0.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.09);border-radius:50px;padding:7px 18px;font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.5);cursor:pointer;transition:all .25s}
+#fsbtn:hover{background:rgba(255,255,255,0.1);color:#fff}
+#cp{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);display:none}
+.cc{background:rgba(12,12,28,0.95);border:1px solid rgba(255,255,255,0.09);border-radius:22px;padding:36px;max-width:400px;text-align:center}
+.cc h2{font-size:20px;font-weight:600;margin-bottom:10px;background:linear-gradient(135deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.cc p{font-size:12px;color:rgba(255,255,255,0.45);line-height:1.8;margin-bottom:22px}
+.cb{background:linear-gradient(135deg,#7c3aed,#2563eb);border:none;color:#fff;padding:11px 28px;border-radius:50px;font-size:13px;cursor:pointer;transition:opacity .2s;margin:5px}
+.cb:hover{opacity:.82}
+.cb.s{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13)}
+#lo{position:fixed;inset:0;z-index:150;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;transition:opacity .8s}
+#lo.h{opacity:0;pointer-events:none}
+.lr{width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,0.08);border-top-color:#a78bfa;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lt{font-size:12px;letter-spacing:2.5px;color:rgba(255,255,255,0.35)}
+#title{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:100;font-size:10px;font-weight:700;letter-spacing:5px;color:rgba(255,255,255,0.14);text-transform:uppercase;pointer-events:none;white-space:nowrap}
+#kbhints{position:fixed;bottom:168px;right:20px;z-index:100;font-size:9px;color:rgba(255,255,255,0.2);text-align:right;letter-spacing:.4px;line-height:2.2;pointer-events:none}
+/* Velocity indicator */
+#vel-ring{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:50;pointer-events:none;opacity:0;transition:opacity .3s}
+@media(max-width:600px){#panel{width:170px;right:8px;top:8px}#tp{right:8px;bottom:8px;max-width:calc(100vw - 16px)}#wc{left:8px;bottom:8px}#wv,#hc{width:130px;height:97px}#gh{display:none}#kbhints{display:none}}
+</style>
+</head>
+<body>
+<div id="lo"><div class="lr"></div><div class="lt">INITIALIZING UNIVERSE</div></div>
+<div id="cp"><div class="cc"><h2>Enable Hand Tracking</h2><p>Allow camera access to control particles with your hands in real-time. Pinch, swipe, palm, fist, and rotation gestures each trigger unique particle effects.</p><button class="cb" id="acb">Enable Camera</button><button class="cb s" id="scb">Continue Without Camera</button></div></div>
+<canvas id="c"></canvas>
+<div id="wc"><video id="wv" autoplay muted playsinline></video><canvas id="hc"></canvas><div id="gl">Initializing…</div></div>
+<div id="panel">
+  <div class="pt">Universe Controls</div>
+  <div class="cr"><div class="cl">Particles <span id="pcv">80K</span></div><input type="range" id="pcr" min="1" max="10" value="4" step="1"></div>
+  <div class="cr"><div class="cl">Speed <span id="spv">1.0×</span></div><input type="range" id="spr" min="1" max="20" value="10"></div>
+  <div class="cr"><div class="cl">Size <span id="szv">1.0×</span></div><input type="range" id="szr" min="1" max="30" value="15"></div>
+  <div class="cr"><div class="cl" style="margin-bottom:7px">Theme</div><div class="tg" id="thg"></div></div>
+  <div class="fb"><span>FPS</span><span class="fv" id="fpsd">60</span><span>Count</span><span class="fv" id="cnt">—</span></div>
+</div>
+<div id="tp"><div class="pt" style="margin-bottom:9px">Templates</div><div class="tg2" id="tmg"></div></div>
+<div id="gh">
+  <div class="gh" id="h-pinch"><span class="ghi">🤏</span>Pinch → Attract</div>
+  <div class="gh" id="h-palm"><span class="ghi">🖐</span>Palm → Burst</div>
+  <div class="gh" id="h-fist"><span class="ghi">✊</span>Fist → Compress</div>
+  <div class="gh" id="h-swipe"><span class="ghi">👋</span>Swipe → Switch</div>
+  <div class="gh" id="h-swirl"><span class="ghi">🌀</span>Rotate → Swirl</div>
+  <div class="gh" id="h-vel"><span class="ghi">⚡</span>Fast Move → Wave</div>
+</div>
+<button id="fsbtn" onclick="toggleFS()">⛶ FULLSCREEN</button>
+<div id="title">Particle Universe</div>
+<div id="kbhints">1–0: Templates &nbsp; ← →: Cycle &nbsp; F: Fullscreen</div>
+<svg id="vel-ring" width="200" height="200" viewBox="0 0 200 200"><circle cx="100" cy="100" r="80" fill="none" stroke="rgba(167,139,250,0.4)" stroke-width="2" stroke-dasharray="502" stroke-dashoffset="502" id="vel-arc"/></svg>
+
+<!-- MediaPipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js" crossorigin="anonymous"></script>
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════════════════════
+// PARTICLE UNIVERSE v2 — Hyper-Responsive Hand Interaction Engine
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const TEMPLATES = [
+  {id:'heart',emoji:'❤️',label:'Heart'},
+  {id:'flower',emoji:'🌸',label:'Flower'},
+  {id:'saturn',emoji:'🪐',label:'Saturn'},
+  {id:'fireworks',emoji:'🎆',label:'Sparks'},
+  {id:'galaxy',emoji:'🌌',label:'Galaxy'},
+  {id:'butterfly',emoji:'🦋',label:'Butterfly'},
+  {id:'star',emoji:'⭐',label:'Star'},
+  {id:'wave',emoji:'🌊',label:'Wave'},
+  {id:'fire',emoji:'🔥',label:'Fire'},
+  {id:'nebula',emoji:'☄️',label:'Nebula'},
+];
+
+const THEMES = [
+  {name:'Cosmic', c:[[0.58,0.38,1.0],[0.28,0.65,1.0],[1.0,0.28,0.78]]},
+  {name:'Neon',   c:[[0.0,1.0,0.75],[0.0,0.55,1.0],[0.75,0.0,1.0]]},
+  {name:'Ember',  c:[[1.0,0.75,0.1],[1.0,0.42,0.1],[1.0,0.1,0.05]]},
+  {name:'Plasma', c:[[1.0,0.08,0.45],[0.75,0.08,1.0],[0.25,0.08,1.0]]},
+  {name:'Aurora', c:[[0.08,1.0,0.38],[0.08,0.75,0.55],[0.28,0.38,1.0]]},
+];
+const THEME_HEX = ['#9955ff','#00ffcc','#ff8811','#ff1188','#22ffaa'];
+const P_SIZES = [15000,30000,50000,80000,110000,150000,200000,260000,320000,400000];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let R, scene, cam, clock;
+let pSys, pGeo, pMat;  // main particles
+let trailSys, trailGeo, trailMat; // finger trails
+let starMat, dustMat;
+let PC = 80000;
+let curTmpl = 0;
+let morphT = 1.0, morphing = false;
+let speedMul = 1.0, sizeMul = 1.0, curTheme = 0;
+let pTime = 0, autoAngle = 0;
+let fc = 0, lastFt = 0;
+let camShake = 0;
+let energyWaves = []; // [{t,radius,strength,x,y,z}]
+
+// ── SMOOTHED HAND STATE (the key to responsiveness) ────────────────────────
+// Raw values arrive from MediaPipe ~30Hz; we interpolate to render frame rate
+// using exponential smoothing with tuned alpha values
+const SMOOTH = {
+  // Position — very fast (alpha near 1 = near-instant, near 0 = heavy smoothing)
+  POS: 0.72,        // finger/palm position lerp per frame
+  POS_FAST: 0.92,   // when velocity is high
+  // Force values
+  FORCE: 0.55,
+  // Velocity estimation
+  VEL_DECAY: 0.88,  // velocity decay per frame
+};
+
+// Per-finger influencer (5 fingers + palm)
+const NUM_INFLUENCERS = 6;
+let inf = Array.from({length:NUM_INFLUENCERS}, (_,i) => ({
+  x:0, y:0, z:0,       // smoothed world position
+  rx:0, ry:0, rz:0,    // raw from landmark
+  vx:0, vy:0, vz:0,    // velocity
+  strength:0,           // force strength (pinch=attract, palm=repel etc.)
+  type:0,               // 0=inactive 1=attract 2=repel 3=swirl 4=compress
+  active:false,
+}));
+
+// Gesture state (smoothed scalars)
+let G = {
+  pinch:0, palm:0, fist:0,           // 0-1 gesture strength
+  swirlAngle:0, handRot:0,
+  handX:0, handY:0, handZ:0,         // palm center
+  rawHandX:0, rawHandY:0,
+  velX:0, velY:0, velMag:0,          // hand velocity (smoothed)
+  prevRawX:0, prevRawY:0,
+  swipeX:null,
+  active:false,
+  lastSeenFrame:0,
+};
+let gFrame = 0; // frame counter for gesture freshness
+
+// Trail buffer — ring buffer of past palm positions
+const TRAIL_LEN = 80;
+const trailPos = new Float32Array(TRAIL_LEN * 3);
+const trailAlpha = new Float32Array(TRAIL_LEN);
+let trailHead = 0;
+let trailActive = false;
+
+// ── VERTEX SHADER — Multi-influencer with swirl & trails ──────────────────
+const VS = `
+precision highp float;
+
+attribute vec3 targetPosition;
+attribute float pSize;
+attribute vec3 col;
+attribute float life;
+attribute float seed;
+
+uniform float uT;           // time
+uniform float uMorph;       // 0..1 morph progress
+uniform float uSpeed;
+uniform float uSzMul;
+
+// Up to 6 finger influencers packed as vec3 arrays
+uniform vec3  uInfPos[6];   // world xyz
+uniform float uInfStr[6];   // strength (negative = repel)
+uniform int   uInfType[6];  // 0=off 1=attract 2=repel 3=swirl 4=compress
+uniform float uInfVel[6];   // velocity magnitude (for turbulence boost)
+
+// Energy waves — up to 4 concurrent
+uniform vec4  uWave[4];     // xyz=center w=radius
+uniform float uWaveStr[4];  // strength
+
+// Global gesture fields
+uniform float uExpand;
+uniform float uCompress;
+uniform float uGlobalVel;   // global hand speed
+
+varying vec3  vCol;
+varying float vAlpha;
+varying float vGlow;
+
+// Hash noise
+float hash(float n){ return fract(sin(n)*43758.5453); }
+float noise3(vec3 p){
+  vec3 i = floor(p); vec3 f = fract(p);
+  f = f*f*(3.0-2.0*f);
+  float n = i.x + i.y*57.0 + 113.0*i.z;
+  return mix(mix(mix(hash(n),hash(n+1.0),f.x),mix(hash(n+57.0),hash(n+58.0),f.x),f.y),
+             mix(mix(hash(n+113.0),hash(n+114.0),f.x),mix(hash(n+170.0),hash(n+171.0),f.x),f.y),f.z);
+}
+
+void main(){
+  // Morphed base position
+  vec3 pos = mix(position, targetPosition, uMorph);
+
+  // Base fluid turbulence — scale with speed
+  float turb = uSpeed * 0.018;
+  float n1 = noise3(pos*1.4 + vec3(uT*0.42, uT*0.31, uT*0.27));
+  float n2 = noise3(pos*2.1 - vec3(uT*0.33, uT*0.44, uT*0.21));
+  pos += vec3(n1-0.5, n2-0.5, (n1-n2)) * turb;
+
+  // Per-influencer forces
+  for(int i=0; i<6; i++){
+    if(uInfType[i] == 0) continue;
+    vec3 diff = uInfPos[i] - pos;
+    float d = length(diff) + 0.0001;
+    float falloff = 1.0 - smoothstep(0.0, 2.8, d);
+    float velBoost = 1.0 + uInfVel[i] * 0.8;
+
+    if(uInfType[i] == 1){ // ATTRACT
+      float f = uInfStr[i] * falloff * velBoost;
+      // Near field: strong magnetic snap; far field: gentle pull
+      float snap = 1.0 + 2.5 * exp(-d * d * 0.8);
+      pos += normalize(diff) * f * snap * 0.06;
+    }
+    else if(uInfType[i] == 2){ // REPEL / BURST
+      float f = uInfStr[i] * (1.0 - smoothstep(0.0, 3.5, d)) * velBoost;
+      pos -= normalize(diff) * f * 0.09;
+    }
+    else if(uInfType[i] == 3){ // SWIRL / VORTEX
+      vec3 toCenter = uInfPos[i] - pos;
+      vec3 up = vec3(0.0, 0.0, 1.0);
+      vec3 tang = normalize(cross(toCenter, up));
+      float f = uInfStr[i] * falloff * velBoost;
+      pos += tang * f * 0.07;
+      // Also pull inward slightly
+      pos += normalize(toCenter) * f * 0.012;
+    }
+    else if(uInfType[i] == 4){ // COMPRESS
+      vec3 toCenter = -pos;
+      float f = uInfStr[i] * falloff * velBoost;
+      pos += normalize(toCenter) * f * 0.05;
+    }
+  }
+
+  // Expand/compress global
+  if(uExpand > 0.0){
+    float d = length(pos) + 0.001;
+    pos += normalize(pos) * uExpand * 0.08 * (1.0 + sin(uT*2.5 + life*6.28)*0.25);
+  }
+  if(uCompress > 0.0){
+    pos *= (1.0 - uCompress * 0.07);
+  }
+
+  // Energy waves — ripple effect
+  for(int i=0; i<4; i++){
+    if(uWaveStr[i] <= 0.0) continue;
+    vec3 toCenter = pos - uWave[i].xyz;
+    float d = length(toCenter);
+    float waveFront = d - uWave[i].w;
+    float bump = exp(-waveFront * waveFront * 1.8) * uWaveStr[i];
+    pos += normalize(toCenter) * bump * 1.8;
+    // Swirl component around wave
+    vec3 tang = normalize(cross(toCenter, vec3(0.0,1.0,0.0)));
+    pos += tang * bump * 0.6 * (seed - 0.5);
+  }
+
+  // Global velocity turbulence boost — makes particles scatter when hand moves fast
+  if(uGlobalVel > 0.1){
+    float scatter = uGlobalVel * 0.04;
+    float nv = noise3(pos * 3.0 + vec3(uT * 2.0));
+    pos += vec3(nv-0.5, hash(nv)-0.5, hash(nv*2.0)-0.5) * scatter;
+  }
+
+  // MVP transform
+  vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+  float depth = -mv.z;
+
+  float sz = pSize * uSzMul * (300.0 / max(depth, 0.5)) * clamp(life, 0.3, 1.0);
+  // Velocity-based size boost
+  sz *= 1.0 + uGlobalVel * 0.3;
+  gl_PointSize = sz;
+  gl_Position = projectionMatrix * mv;
+
+  // Color pulse with velocity tint
+  float pulse = 0.72 + 0.28 * sin(uT * 2.2 + life * 9.42 + seed * 6.28);
+  vCol = col * pulse;
+
+  // Glow boost near influencers
+  float closestInf = 9999.0;
+  for(int i=0; i<6; i++){
+    if(uInfType[i] == 0) continue;
+    closestInf = min(closestInf, length(uInfPos[i] - pos));
+  }
+  vGlow = exp(-closestInf * closestInf * 0.6) * 1.5;
+
+  // Velocity-based blue tint
+  vCol += vec3(0.1, 0.2, 0.5) * uGlobalVel * 0.4;
+
+  vAlpha = life;
+}
+`;
+
+const FS = `
+precision mediump float;
+varying vec3 vCol;
+varying float vAlpha;
+varying float vGlow;
+
+void main(){
+  vec2 uv = gl_PointCoord * 2.0 - 1.0;
+  float r2 = dot(uv, uv);
+  if(r2 > 1.0) discard;
+
+  // Layered glow: soft outer + bright core
+  float soft = 1.0 - smoothstep(0.0, 1.0, r2);
+  soft = pow(soft, 1.2);
+  float core = exp(-r2 * 5.0);
+  float rim  = smoothstep(0.55, 1.0, r2) * 0.5;
+
+  vec3 c = vCol * (soft + core * 0.9) + vCol * rim;
+  // Extra glow from nearby influencers
+  c += vCol * vGlow * core;
+
+  float a = (soft * 0.85 + core * 0.15) * vAlpha;
+  gl_FragColor = vec4(c, a);
+}
+`;
+
+// Trail shader
+const TRAIL_VS = `
+attribute float trailAlpha;
+attribute float trailIdx;
+uniform float uT;
+varying float vA;
+void main(){
+  vA = trailAlpha;
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_PointSize = 4.0 * (200.0 / max(-mv.z, 0.5)) * trailAlpha;
+  gl_Position = projectionMatrix * mv;
+}
+`;
+const TRAIL_FS = `
+precision mediump float;
+varying float vA;
+void main(){
+  vec2 uv = gl_PointCoord * 2.0 - 1.0;
+  float r = dot(uv,uv);
+  if(r > 1.0) discard;
+  float a = (1.0-r) * vA * 0.7;
+  gl_FragColor = vec4(0.7, 0.5, 1.0, a);
+}
+`;
+
+// ── TEMPLATE GENERATORS ────────────────────────────────────────────────────
+function genTemplate(id, n){
+  const p = new Float32Array(n*3);
+  ({
+    heart:()=>{
+      for(let i=0;i<n;i++){
+        const t=(i/n)*Math.PI*2, r=0.85+Math.random()*0.25;
+        const x=r*(16*Math.pow(Math.sin(t),3))*0.13;
+        const y=r*(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))*0.13;
+        p[i*3]=x;p[i*3+1]=y;p[i*3+2]=(Math.random()-.5)*.55;
+      }
+    },
+    flower:()=>{
+      for(let i=0;i<n;i++){
+        const a=(i/n)*Math.PI*2;
+        const petR=1.2+.7*Math.cos(7*a);
+        const r=(petR*.35)*(0.5+.5*Math.random());
+        p[i*3]=r*Math.cos(a);p[i*3+1]=r*Math.sin(a);p[i*3+2]=(Math.random()-.5)*.35;
+      }
+    },
+    saturn:()=>{
+      const sp=Math.floor(n*.48), rp=n-sp;
+      for(let i=0;i<sp;i++){
+        const u=Math.random(),v=Math.random();
+        const th=2*Math.PI*u, ph=Math.acos(2*v-1);
+        const r=.95+(Math.random()-.5)*.08;
+        p[i*3]=r*Math.sin(ph)*Math.cos(th);
+        p[i*3+1]=r*Math.sin(ph)*Math.sin(th)*.58;
+        p[i*3+2]=r*Math.cos(ph);
+      }
+      for(let i=0;i<rp;i++){
+        const a=Math.random()*Math.PI*2,r=1.45+Math.random()*.85,spread=(Math.random()-.5)*.055;
+        const idx=sp+i;
+        p[idx*3]=r*Math.cos(a);p[idx*3+1]=spread;p[idx*3+2]=r*Math.sin(a);
+      }
+    },
+    fireworks:()=>{
+      const B=10;
+      for(let i=0;i<n;i++){
+        const bx=(Math.random()-.5)*2.2,by=(Math.random()-.5)*2.2,bz=(Math.random()-.5)*1.8;
+        const u=Math.random(),v=Math.random();
+        const th=2*Math.PI*u,ph=Math.acos(2*v-1);
+        const r=Math.pow(Math.random(),.5)*.9;
+        p[i*3]=bx+r*Math.sin(ph)*Math.cos(th);
+        p[i*3+1]=by+r*Math.sin(ph)*Math.sin(th);
+        p[i*3+2]=bz+r*Math.cos(ph);
+      }
+    },
+    galaxy:()=>{
+      for(let i=0;i<n;i++){
+        const arm=Math.floor(Math.random()*4);
+        const r=Math.pow(Math.random(),.45)*3.2;
+        const a=(arm/4)*Math.PI*2+r*.75+(Math.random()-.5)*.38;
+        p[i*3]=r*Math.cos(a);
+        p[i*3+1]=(Math.random()-.5)*.28*(1-r/4);
+        p[i*3+2]=r*Math.sin(a);
+      }
+    },
+    butterfly:()=>{
+      for(let i=0;i<n;i++){
+        const t=(i/n)*Math.PI*22;
+        const r=Math.exp(Math.cos(t))-2*Math.cos(4*t)-Math.pow(Math.sin(t/12),5);
+        p[i*3]=r*Math.sin(t)*.52;
+        p[i*3+1]=r*Math.cos(t)*.52;
+        p[i*3+2]=(Math.random()-.5)*.42;
+      }
+    },
+    star:()=>{
+      for(let i=0;i<n;i++){
+        const pts=12;
+        const sector=Math.floor(Math.random()*pts);
+        const a=(sector/pts)*Math.PI*2+(Math.random()-.5)*.25;
+        const inner=.35+Math.random()*.15, outer=.9+Math.random()*.25;
+        const r=Math.random()<.5?outer:inner;
+        p[i*3]=r*Math.cos(a);
+        p[i*3+1]=r*Math.sin(a);
+        p[i*3+2]=(Math.random()-.5)*.45;
+      }
+    },
+    wave:()=>{
+      for(let i=0;i<n;i++){
+        const x=(Math.random()-.5)*6.5,z=(Math.random()-.5)*5.5;
+        const y=.75*Math.sin(x*1.4)*Math.cos(z*1.1)+(Math.random()-.5)*.12;
+        p[i*3]=x;p[i*3+1]=y;p[i*3+2]=z;
+      }
+    },
+    fire:()=>{
+      for(let i=0;i<n;i++){
+        const t=Math.random(), a=Math.random()*Math.PI*2;
+        const r=(1-t)*.75*Math.random();
+        p[i*3]=r*Math.cos(a)*(1-t*.5);
+        p[i*3+1]=t*2.6-1.15+(Math.random()-.5)*.08;
+        p[i*3+2]=r*Math.sin(a)*(1-t*.5);
+      }
+    },
+    nebula:()=>{
+      const cx=[.6,-.6,.9,-.9,0,.3,-.3], cy=[.5,.5,-.5,-.5,1.1,.8,-.8];
+      for(let i=0;i<n;i++){
+        const cl=Math.floor(Math.random()*7);
+        const u=Math.random(),v=Math.random();
+        const th=2*Math.PI*u,ph=Math.acos(2*v-1);
+        const r=Math.pow(Math.random(),.28)*1.4;
+        p[i*3]=r*Math.sin(ph)*Math.cos(th)*.55+cx[cl];
+        p[i*3+1]=r*Math.sin(ph)*Math.sin(th)*.42+cy[cl];
+        p[i*3+2]=r*Math.cos(ph)*.55;
+      }
+    },
+  })[id]?.();
+  return p;
+}
+
+function genColors(themeIdx, n){
+  const c=new Float32Array(n*3), tc=THEMES[themeIdx].c;
+  for(let i=0;i<n;i++){
+    const t=i/n, ci=Math.floor(t*(tc.length-1)), ci2=Math.min(ci+1,tc.length-1);
+    const f=t*(tc.length-1)-ci;
+    const nr=(Math.random()-.5)*.18;
+    c[i*3]=Math.max(0,Math.min(1,tc[ci][0]*(1-f)+tc[ci2][0]*f+nr));
+    c[i*3+1]=Math.max(0,Math.min(1,tc[ci][1]*(1-f)+tc[ci2][1]*f+nr));
+    c[i*3+2]=Math.max(0,Math.min(1,tc[ci][2]*(1-f)+tc[ci2][2]*f+nr));
+  }
+  return c;
+}
+
+// ── UNIFORM BUILDER ────────────────────────────────────────────────────────
+function makeUniforms(){
+  // Build arrays for 6 influencers
+  const infPos=[], infStr=[], infType=[], infVel=[];
+  for(let i=0;i<NUM_INFLUENCERS;i++){
+    infPos.push(new THREE.Vector3());
+    infStr.push(0); infType.push(0); infVel.push(0);
+  }
+  // 4 energy waves
+  const waveData=[new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4()];
+  const waveStr=[0,0,0,0];
+  return {
+    uT:{value:0}, uMorph:{value:1.0},
+    uSpeed:{value:1.0}, uSzMul:{value:1.0},
+    uInfPos:{value:infPos}, uInfStr:{value:infStr},
+    uInfType:{value:infType}, uInfVel:{value:infVel},
+    uWave:{value:waveData}, uWaveStr:{value:waveStr},
+    uExpand:{value:0}, uCompress:{value:0}, uGlobalVel:{value:0},
+  };
+}
+
+// ── THREE.JS INIT ──────────────────────────────────────────────────────────
+function initThree(){
+  R = new THREE.WebGLRenderer({canvas:document.getElementById('c'), antialias:true, powerPreference:'high-performance'});
+  R.setPixelRatio(Math.min(devicePixelRatio,2));
+  R.setSize(innerWidth,innerHeight);
+  R.setClearColor(0x000008,1);
+  R.sortObjects = false;
+
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000010, 0.028);
+
+  cam = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.05, 80);
+  cam.position.set(0,0,6);
+
+  clock = new THREE.Clock();
+  buildParticles();
+  buildTrails();
+  buildBackground();
+
+  addEventListener('resize', ()=>{
+    cam.aspect=innerWidth/innerHeight;
+    cam.updateProjectionMatrix();
+    R.setSize(innerWidth,innerHeight);
+  });
+
+  // Mouse fallback
+  addEventListener('mousemove', e=>{
+    if(G.active) return; // hand tracking takes priority
+    const mx=(e.clientX/innerWidth-.5)*5.5;
+    const my=-(e.clientY/innerHeight-.5)*3.8;
+    G.rawHandX=mx; G.rawHandY=my;
+    G.velX=(mx-G.prevRawX)*15;
+    G.velY=(my-G.prevRawY)*15;
+    G.prevRawX=mx; G.prevRawY=my;
+    G.velMag=Math.hypot(G.velX,G.velY);
+  });
+}
+
+function buildParticles(){
+  if(pSys){ scene.remove(pSys); pGeo.dispose(); pMat.dispose(); }
+  const n=PC;
+  const src=genTemplate(TEMPLATES[curTmpl].id, n);
+  const tgt=new Float32Array(src);
+  const cols=genColors(curTheme, n);
+  const sz=new Float32Array(n), lf=new Float32Array(n), sd=new Float32Array(n);
+  for(let i=0;i<n;i++){ sz[i]=0.38+Math.random()*1.65; lf[i]=0.5+Math.random()*.5; sd[i]=Math.random(); }
+
+  pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position',     new THREE.BufferAttribute(src,3).setUsage(THREE.DynamicDrawUsage));
+  pGeo.setAttribute('targetPosition',new THREE.BufferAttribute(tgt,3));
+  pGeo.setAttribute('col',          new THREE.BufferAttribute(cols,3));
+  pGeo.setAttribute('pSize',        new THREE.BufferAttribute(sz,1));
+  pGeo.setAttribute('life',         new THREE.BufferAttribute(lf,1));
+  pGeo.setAttribute('seed',         new THREE.BufferAttribute(sd,1));
+
+  pMat = new THREE.ShaderMaterial({
+    vertexShader:VS, fragmentShader:FS,
+    uniforms:makeUniforms(),
+    transparent:true, depthTest:true, depthWrite:false,
+    blending:THREE.AdditiveBlending, vertexColors:false,
+  });
+  pSys = new THREE.Points(pGeo, pMat);
+  scene.add(pSys);
+  document.getElementById('cnt').textContent = n>999?Math.round(n/1e3)+'K':n;
+}
+
+function buildTrails(){
+  if(trailSys){ scene.remove(trailSys); trailGeo.dispose(); trailMat.dispose(); }
+  trailPos.fill(0);
+  trailAlpha.fill(0);
+  trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_LEN*3),3).setUsage(THREE.DynamicDrawUsage));
+  trailGeo.setAttribute('trailAlpha',new THREE.BufferAttribute(new Float32Array(TRAIL_LEN),1).setUsage(THREE.DynamicDrawUsage));
+  trailGeo.setAttribute('trailIdx',  new THREE.BufferAttribute(new Float32Array(TRAIL_LEN).map((_,i)=>i/TRAIL_LEN),1));
+  trailMat = new THREE.ShaderMaterial({
+    vertexShader:TRAIL_VS, fragmentShader:TRAIL_FS,
+    uniforms:{uT:{value:0}},
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+  });
+  trailSys = new THREE.Points(trailGeo, trailMat);
+  trailSys.frustumCulled=false;
+  scene.add(trailSys);
+}
+
+function buildBackground(){
+  // Stars
+  const N=3200, pos=new Float32Array(N*3), sc=new Float32Array(N*3);
+  const sz=new Float32Array(N), lf=new Float32Array(N).fill(.35), sd=new Float32Array(N), tg=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const u=Math.random(),v=Math.random();
+    const th=2*Math.PI*u, ph=Math.acos(2*v-1), r=14+Math.random()*7;
+    pos[i*3]=r*Math.sin(ph)*Math.cos(th); pos[i*3+1]=r*Math.sin(ph)*Math.sin(th); pos[i*3+2]=r*Math.cos(ph);
+    tg[i*3]=pos[i*3]; tg[i*3+1]=pos[i*3+1]; tg[i*3+2]=pos[i*3+2];
+    const w=Math.random()<.28;
+    sc[i*3]=w?1.0:.88+Math.random()*.12; sc[i*3+1]=w?.88:.88+Math.random()*.12; sc[i*3+2]=w?.55:.95+Math.random()*.05;
+    sz[i]=.3+Math.random()*.9; sd[i]=Math.random();
+  }
+  const sg=new THREE.BufferGeometry();
+  sg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  sg.setAttribute('targetPosition',new THREE.BufferAttribute(tg,3));
+  sg.setAttribute('col',new THREE.BufferAttribute(sc,3));
+  sg.setAttribute('pSize',new THREE.BufferAttribute(sz,1));
+  sg.setAttribute('life',new THREE.BufferAttribute(lf,1));
+  sg.setAttribute('seed',new THREE.BufferAttribute(sd,1));
+  const sm=new THREE.ShaderMaterial({
+    vertexShader:VS, fragmentShader:FS,
+    uniforms:{...makeUniforms(), uSzMul:{value:.5}, uSpeed:{value:.05}},
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+  });
+  starMat=sm;
+  scene.add(new THREE.Points(sg,sm));
+
+  // Dust
+  const DN=4000, dp=new Float32Array(DN*3), dph=new Float32Array(DN), dsp=new Float32Array(DN);
+  for(let i=0;i<DN;i++){
+    dp[i*3]=(Math.random()-.5)*18; dp[i*3+1]=(Math.random()-.5)*18; dp[i*3+2]=(Math.random()-.5)*18;
+    dph[i]=Math.random()*Math.PI*2; dsp[i]=.08+Math.random()*.22;
+  }
+  const dg=new THREE.BufferGeometry();
+  dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
+  dg.setAttribute('phase',   new THREE.BufferAttribute(dph,1));
+  dg.setAttribute('spd',     new THREE.BufferAttribute(dsp,1));
+  dustMat=new THREE.ShaderMaterial({
+    vertexShader:`
+      attribute float phase; attribute float spd;
+      uniform float uT;
+      void main(){
+        vec3 p=position;
+        p.x+=sin(uT*spd+phase)*.28; p.y+=cos(uT*spd*.7+phase)*.2; p.z+=sin(uT*spd*.5+phase*2.)*.14;
+        vec4 mv=modelViewMatrix*vec4(p,1.); gl_PointSize=1.4*(380./max(-mv.z,.5));
+        gl_Position=projectionMatrix*mv;
+      }`,
+    fragmentShader:`void main(){ vec2 uv=gl_PointCoord*2.-1.; if(dot(uv,uv)>1.)discard; gl_FragColor=vec4(.45,.4,.75,(1.-dot(uv,uv))*.18); }`,
+    uniforms:{uT:{value:0}},
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+  });
+  scene.add(new THREE.Points(dg,dustMat));
+}
+
+// ── MORPH SYSTEM ───────────────────────────────────────────────────────────
+let morphSpeed = 1.8; // seconds for full morph — faster than v1
+
+function morphTo(idx){
+  if(idx===curTmpl && morphT>=1) return;
+  morphing=true; morphT=0;
+  curTmpl=idx;
+
+  const newTgt=genTemplate(TEMPLATES[idx].id, PC);
+  pGeo.attributes.targetPosition.array.set(newTgt);
+  pGeo.attributes.targetPosition.needsUpdate=true;
+
+  const newCols=genColors(curTheme, PC);
+  pGeo.attributes.col.array.set(newCols);
+  pGeo.attributes.col.needsUpdate=true;
+
+  pMat.uniforms.uMorph.value=0;
+
+  // Fire energy wave from center
+  spawnWave(0,0,0,3.5);
+
+  document.querySelectorAll('.tmb').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  resetAutoTimer();
+}
+
+// ── ENERGY WAVE SYSTEM ─────────────────────────────────────────────────────
+// Pool of 4 concurrent waves
+function spawnWave(x,y,z,str=2.0){
+  const slot = energyWaves.length%4;
+  energyWaves.push({slot,x,y,z,r:0,str,t:0});
+  if(energyWaves.length>4) energyWaves.shift();
+}
+
+function updateWaves(dt){
+  const U=pMat.uniforms;
+  // Clear all slots
+  for(let i=0;i<4;i++){ U.uWaveStr.value[i]=0; }
+  energyWaves=energyWaves.filter(w=>{
+    w.r+=dt*4.2;
+    w.t+=dt;
+    const decay=Math.max(0,1.0-w.r/5.5);
+    const s=w.str*decay;
+    if(s<0.01) return false;
+    const i=w.slot;
+    U.uWave.value[i].set(w.x,w.y,w.z,w.r);
+    U.uWaveStr.value[i]=s;
+    return true;
+  });
+}
+
+// ── RENDER LOOP ────────────────────────────────────────────────────────────
+let mouseX=0, mouseY=0;
+let camX=0, camY=0, camZ=6;
+let autoY=0, autoX=0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(), 0.05); // cap at 50ms
+  pTime+=dt; autoAngle+=dt;
+
+  // FPS
+  fc++;
+  const now=performance.now();
+  if(now-lastFt>600){
+    document.getElementById('fpsd').textContent=Math.round(fc*1e3/(now-lastFt));
+    fc=0; lastFt=now;
+  }
+
+  // ── Smooth hand position toward raw values ──
+  // Adaptive alpha: faster when velocity is high (less smoothing = more responsive)
+  const velFactor=Math.min(1, G.velMag/8.0);
+  const alpha=SMOOTH.POS + (SMOOTH.POS_FAST - SMOOTH.POS)*velFactor;
+  G.handX += (G.rawHandX - G.handX)*alpha;
+  G.handY += (G.rawHandY - G.handY)*alpha;
+
+  // Smooth velocity
+  G.velX*=SMOOTH.VEL_DECAY;
+  G.velY*=SMOOTH.VEL_DECAY;
+  G.velMag=Math.hypot(G.velX,G.velY);
+
+  // ── Update influencer uniforms from smoothed inf[] state ──
+  const U=pMat.uniforms;
+  for(let i=0;i<NUM_INFLUENCERS;i++){
+    const f=inf[i];
+    if(!f.active){ U.uInfType.value[i]=0; continue; }
+    // Lerp influencer position (extremely fast — near-zero latency on render side)
+    const fa=alpha; // same adaptive alpha
+    f.x+=(f.rx-f.x)*fa;
+    f.y+=(f.ry-f.y)*fa;
+    f.z+=(f.rz-f.z)*fa;
+    f.vx+=(f.rx-f.x)*dt*30;
+    f.vy+=(f.ry-f.y)*dt*30;
+    f.vx*=0.82; f.vy*=0.82;
+    const fvm=Math.hypot(f.vx,f.vy);
+
+    U.uInfPos.value[i].set(f.x,f.y,f.z);
+    U.uInfStr.value[i]=f.strength;
+    U.uInfType.value[i]=f.type;
+    U.uInfVel.value[i]=Math.min(fvm*0.5,3.0);
+  }
+
+  // ── Global gesture fields ──
+  U.uExpand.value += (G.palm*2.2 - U.uExpand.value)*0.25;
+  U.uCompress.value += (G.fist*1.8 - U.uCompress.value)*0.25;
+  U.uGlobalVel.value += (Math.min(G.velMag*0.12, 2.0) - U.uGlobalVel.value)*0.35;
+
+  // ── Morph ──
+  if(morphing){
+    morphT=Math.min(1,morphT+dt/1.4);
+    U.uMorph.value=easeInOutCubic(morphT);
+    if(morphT>=1) morphing=false;
+  }
+
+  // ── Waves ──
+  updateWaves(dt);
+
+  // ── Trails ──
+  if(G.active && (G.velMag>0.2 || G.pinch>0.3)){
+    trailActive=true;
+    // Push current hand position to ring buffer
+    trailPos[trailHead*3]=G.handX;
+    trailPos[trailHead*3+1]=G.handY;
+    trailPos[trailHead*3+2]=G.handZ||0;
+    trailAlpha[trailHead]=1.0;
+    trailHead=(trailHead+1)%TRAIL_LEN;
+    trailActive=true;
+  }
+  // Fade trail
+  for(let i=0;i<TRAIL_LEN;i++) trailAlpha[i]*=0.94;
+  // Write to GPU
+  const ta=trailGeo.attributes;
+  ta.position.array.set(trailPos); ta.position.needsUpdate=true;
+  ta.trailAlpha.array.set(trailAlpha); ta.trailAlpha.needsUpdate=true;
+
+  // ── Time ──
+  U.uT.value=pTime;
+  U.uSpeed.value=speedMul;
+  U.uSzMul.value=sizeMul;
+  dustMat.uniforms.uT.value=pTime;
+  if(starMat) starMat.uniforms.uT.value=pTime*0.04;
+
+  // ── Auto rotation ──
+  autoY+=dt*0.12;
+  if(G.active) autoY+=G.handRot*dt*0.4;
+
+  // ── Camera ──
+  const camAlpha = G.active ? 0.12 : 0.06; // faster response with hand
+  const targetX = G.active ? G.handX*0.35 : mouseX*0.9;
+  const targetY = G.active ? G.handY*0.25 : mouseY*0.6;
+  camX+=(targetX-camX)*camAlpha;
+  camY+=(targetY-camY)*camAlpha;
+  cam.position.x=camX;
+  cam.position.y=camY;
+
+  // Shake
+  if(camShake>0.01){
+    cam.position.x+=(Math.random()-.5)*camShake*0.025;
+    cam.position.y+=(Math.random()-.5)*camShake*0.02;
+    camShake*=0.88;
+  }
+  cam.lookAt(0,0,0);
+
+  pSys.rotation.y=autoY;
+  pSys.rotation.x=Math.sin(autoAngle*.18)*.08;
+  trailSys.rotation.copy(pSys.rotation);
+
+  R.render(scene,cam);
+}
+
+function easeInOutCubic(t){
+  return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+}
+
+// ── HAND TRACKING ENGINE ───────────────────────────────────────────────────
+// This is the critical section — redesigned for minimal latency
+
+let mpHands=null, mpCam=null;
+let handFrameTime=0; // timestamp of last hand frame
+let prevLM=null;     // previous frame landmarks for velocity
+
+// ── LANDMARK INDEX CONSTANTS ──
+const LM = {
+  WRIST:0, THUMB_TIP:4, INDEX_MCP:5, INDEX_TIP:8,
+  MIDDLE_MCP:9, MIDDLE_TIP:12, RING_MCP:13, RING_TIP:16,
+  PINKY_MCP:17, PINKY_TIP:20,
+};
+
+// Map normalized [0,1] landmark to world [-X,X] range
+// Critical: we map BEFORE smoothing, not after
+function lmToWorld(lm, idx){
+  const p=lm[idx];
+  return {
+    x:(0.5-p.x)*5.8,   // flip X (mirror)
+    y:(0.5-p.y)*4.0,
+    z:(p.z||0)*-4.0,
+  };
+}
+
+// Landmark distance in normalized coords
+function lmDist(lm, a, b){
+  return Math.hypot(lm[a].x-lm[b].x, lm[a].y-lm[b].y);
+}
+
+// Detect if a finger is extended (tip higher than MCP in image coords = lower y)
+function fingerExtended(lm, tip, pip, mcp){
+  return lm[tip].y < lm[pip].y - 0.01;
+}
+
+// Normalized hand size for scale-invariant thresholds
+function handSize(lm){ return lmDist(lm, LM.WRIST, LM.MIDDLE_MCP); }
+
+async function initHandTracking(video){
+  if(typeof Hands==='undefined'){ console.warn('MediaPipe not loaded'); return; }
+
+  mpHands = new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${f}`});
+  mpHands.setOptions({
+    maxNumHands:1,
+    modelComplexity:1,
+    minDetectionConfidence:0.6,
+    minTrackingConfidence:0.55, // lower = faster tracking, slightly less stable
+  });
+  mpHands.onResults(onHandResults);
+
+  // Use Camera wrapper at max performance settings
+  mpCam = new Camera(video, {
+    onFrame: async()=>{ await mpHands.send({image:video}); },
+    width:320, height:240, // small resolution = lower latency
+  });
+  mpCam.start();
+  G.active=true;
+  document.getElementById('gl').textContent='Hand tracking ready';
+}
+
+let lastHintTime=0;
+function flashHint(id){
+  const now=Date.now();
+  if(now-lastHintTime<300) return;
+  lastHintTime=now;
+  document.querySelectorAll('.gh').forEach(h=>h.classList.remove('on'));
+  const el=document.getElementById(id);
+  if(el){ el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),1200); }
+}
+
+function onHandResults(results){
+  gFrame++;
+  const handCanvas=document.getElementById('hc');
+  const ctx=handCanvas.getContext('2d');
+  ctx.clearRect(0,0,160,120);
+
+  if(!results.multiHandLandmarks?.length){
+    // No hand — decay all influencers rapidly
+    G.active=false;
+    for(let i=0;i<NUM_INFLUENCERS;i++) inf[i].active=false;
+    G.pinch=0; G.palm=0; G.fist=0;
+    document.getElementById('gl').textContent='Show your hand ✋';
+    document.querySelectorAll('.gh').forEach(h=>h.classList.remove('on'));
+    prevLM=null;
+    return;
+  }
+
+  G.active=true;
+  const lm=results.multiHandLandmarks[0];
+
+  // Draw skeleton
+  if(typeof drawConnectors!=='undefined'){
+    drawConnectors(ctx,lm,HAND_CONNECTIONS,{color:'rgba(130,90,255,0.65)',lineWidth:1});
+    drawLandmarks(ctx,lm,{color:'rgba(220,180,255,0.9)',lineWidth:1,radius:2});
+  }
+
+  const hs=handSize(lm)+0.001; // scale-invariant
+  const now=performance.now();
+  const frameDt=Math.min((now-handFrameTime)/1000, 0.1);
+  handFrameTime=now;
+
+  // ── Hand velocity from wrist delta ──
+  const wW=lmToWorld(lm, LM.WRIST);
+  if(prevLM){
+    const pW=lmToWorld(prevLM, LM.WRIST);
+    const dvx=(wW.x-pW.x)/Math.max(frameDt,0.008);
+    const dvy=(wW.y-pW.y)/Math.max(frameDt,0.008);
+    // Exponential smoothing on velocity
+    G.velX=G.velX*.45+dvx*.55;
+    G.velY=G.velY*.45+dvy*.55;
+    G.velMag=Math.hypot(G.velX,G.velY);
+    // High-speed = energy wave
+    if(G.velMag>12 && now-lastWaveTime>350){
+      spawnWave(wW.x,wW.y,0, Math.min(G.velMag*0.18,3.5));
+      lastWaveTime=now;
+      camShake=Math.min(G.velMag*0.04,0.8);
+      flashHint('h-vel');
+    }
+  }
+  prevLM=lm;
+
+  // ── Set raw hand position (smoothing happens in animate()) ──
+  G.rawHandX=wW.x;
+  G.rawHandY=wW.y;
+  G.handZ=wW.z;
+
+  // ── GESTURE DETECTION — scale-invariant thresholds ──
+  const pinchDist=lmDist(lm,LM.THUMB_TIP,LM.INDEX_TIP);
+  const pinchRatio=pinchDist/hs;
+  const isPinch=pinchRatio<0.32;
+
+  // Finger extension checks (more robust than raw y comparison)
+  const idxExt=fingerExtended(lm,LM.INDEX_TIP,6,LM.INDEX_MCP);
+  const midExt=fingerExtended(lm,LM.MIDDLE_TIP,10,LM.MIDDLE_MCP);
+  const rngExt=fingerExtended(lm,LM.RING_TIP,14,LM.RING_MCP);
+  const pnkExt=fingerExtended(lm,LM.PINKY_TIP,18,LM.PINKY_MCP);
+  const extCount=+idxExt + +midExt + +rngExt + +pnkExt;
+  const isPalm=extCount>=4 && !isPinch;
+  const isFist=extCount<=1 && pinchRatio<0.55;
+
+  // ── Smooth gesture scalars (no hard transitions) ──
+  const gAlpha=0.35;
+  G.pinch += ((isPinch?1:0)-G.pinch)*gAlpha;
+  G.palm  += ((isPalm?1:0)-G.palm)*gAlpha;
+  G.fist  += ((isFist?1:0)-G.fist)*gAlpha;
+
+  // ── Swipe detection ──
+  if(G.swipeX===null) G.swipeX=lm[LM.WRIST].x;
+  const swipeDelta=lm[LM.WRIST].x-G.swipeX;
+  if(Math.abs(swipeDelta)>0.22){
+    const dir=swipeDelta>0?-1:1;
+    morphTo((curTmpl+dir+TEMPLATES.length)%TEMPLATES.length);
+    G.swipeX=lm[LM.WRIST].x;
+    camShake=0.7;
+    flashHint('h-swipe');
+  }
+
+  // ── Hand rotation (tilt) for swirl ──
+  const tilt=lm[LM.INDEX_MCP].x-lm[LM.PINKY_MCP].x;
+  G.handRot=G.handRot*.6+tilt*.4;
+
+  // ── Map fingers to influencers ──
+  // Each active finger = one influencer. We use world-space positions.
+  const fingerDefs=[
+    {tip:LM.THUMB_TIP,  base:LM.WRIST},
+    {tip:LM.INDEX_TIP,  base:LM.INDEX_MCP},
+    {tip:LM.MIDDLE_TIP, base:LM.MIDDLE_MCP},
+    {tip:LM.RING_TIP,   base:LM.RING_MCP},
+    {tip:LM.PINKY_TIP,  base:LM.PINKY_MCP},
+  ];
+  // Slot 5 = palm center
+  const palmW=lmToWorld(lm,LM.WRIST);
+  const midW=lmToWorld(lm,LM.MIDDLE_MCP);
+  const palmCX=(palmW.x+midW.x)*.5, palmCY=(palmW.y+midW.y)*.5;
+
+  // Determine gesture type for influencers
+  let infTypeForFinger=0;
+  if(G.pinch>0.4)     infTypeForFinger=1; // attract
+  else if(G.palm>0.5) infTypeForFinger=2; // repel/burst
+  else if(G.fist>0.5) infTypeForFinger=4; // compress
+  else if(Math.abs(G.handRot)>0.15) infTypeForFinger=3; // swirl
+  else infTypeForFinger=1; // default gentle attract
+
+  // Strength modulated by gesture intensity and velocity
+  const velBoost=1+Math.min(G.velMag*0.05,1.2);
+  const baseStr=G.pinch>0.4 ? G.pinch*2.8*velBoost
+                : G.palm>0.5 ? G.palm*2.2*velBoost
+                : G.fist>0.5 ? G.fist*1.8
+                : Math.abs(G.handRot)>0.15 ? Math.abs(G.handRot)*3.5*velBoost
+                : 0.8*velBoost;
+
+  for(let i=0;i<5;i++){
+    const fp=lmToWorld(lm,fingerDefs[i].tip);
+    inf[i].rx=fp.x; inf[i].ry=fp.y; inf[i].rz=fp.z;
+    if(!inf[i].active){ inf[i].x=fp.x; inf[i].y=fp.y; inf[i].z=fp.z; } // snap on first frame
+    inf[i].active=true;
+    inf[i].type=infTypeForFinger;
+    inf[i].strength=baseStr;
+  }
+  // Palm center influencer
+  inf[5].rx=palmCX; inf[5].ry=palmCY; inf[5].rz=palmW.z;
+  if(!inf[5].active){ inf[5].x=palmCX; inf[5].y=palmCY; }
+  inf[5].active=true;
+  inf[5].type=infTypeForFinger;
+  inf[5].strength=baseStr*1.3;
+
+  // ── Update gesture label and hints ──
+  let label='✋ Tracking';
+  if(G.pinch>0.4){ label='🤏 Pinch — Attracting'; flashHint('h-pinch'); }
+  else if(G.palm>0.5){ label='🖐 Palm — Bursting'; flashHint('h-palm'); }
+  else if(G.fist>0.5){ label='✊ Fist — Compressing'; flashHint('h-fist'); }
+  else if(Math.abs(G.handRot)>0.2){ label='🌀 Tilt — Swirling'; flashHint('h-swirl'); }
+  document.getElementById('gl').textContent=label;
+}
+
+let lastWaveTime=0;
+
+// ── UI ─────────────────────────────────────────────────────────────────────
+function buildUI(){
+  const tmg=document.getElementById('tmg');
+  TEMPLATES.forEach((t,i)=>{
+    const b=document.createElement('button');
+    b.className='tmb'+(i===0?' active':'');
+    b.innerHTML=`${t.emoji}<span>${t.label}</span>`;
+    b.onclick=()=>morphTo(i);
+    tmg.appendChild(b);
+  });
+  const thg=document.getElementById('thg');
+  THEMES.forEach((t,i)=>{
+    const b=document.createElement('button');
+    b.className='tb'+(i===0?' active':'');
+    b.style.background=THEME_HEX[i]; b.title=t.name;
+    b.onclick=()=>{
+      curTheme=i;
+      document.querySelectorAll('.tb').forEach((x,j)=>x.classList.toggle('active',j===i));
+      const nc=genColors(i,PC);
+      pGeo.attributes.col.array.set(nc);
+      pGeo.attributes.col.needsUpdate=true;
+    };
+    thg.appendChild(b);
+  });
+  document.getElementById('pcr').oninput=e=>{
+    PC=P_SIZES[+e.target.value-1];
+    document.getElementById('pcv').textContent=PC>999?Math.round(PC/1e3)+'K':PC;
+    buildParticles(); buildTrails();
+  };
+  document.getElementById('spr').oninput=e=>{
+    speedMul=e.target.value/10;
+    document.getElementById('spv').textContent=speedMul.toFixed(1)+'×';
+  };
+  document.getElementById('szr').oninput=e=>{
+    sizeMul=e.target.value/15;
+    document.getElementById('szv').textContent=sizeMul.toFixed(1)+'×';
+  };
+}
+
+// ── MOUSE FALLBACK FOR NON-CAMERA MODE ──
+addEventListener('mousemove', e=>{
+  mouseX=(e.clientX/innerWidth-.5)*2.2;
+  mouseY=-(e.clientY/innerHeight-.5)*1.6;
+  if(!G.active){
+    // Use mouse as single influencer
+    const mx=(e.clientX/innerWidth-.5)*5.5;
+    const my=-(e.clientY/innerHeight-.5)*3.8;
+    inf[0].rx=mx; inf[0].ry=my; inf[0].rz=0;
+    if(!inf[0].active){ inf[0].x=mx; inf[0].y=my; }
+    inf[0].active=true; inf[0].type=1; inf[0].strength=1.2;
+    for(let i=1;i<NUM_INFLUENCERS;i++) inf[i].active=false;
+  }
+});
+
+// ── CAMERA PERMISSION ──────────────────────────────────────────────────────
+document.getElementById('acb').onclick=async()=>{
+  document.getElementById('cp').style.display='none';
+  const v=document.getElementById('wv');
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({
+      video:{width:320,height:240,facingMode:'user',
+             frameRate:{ideal:30,max:30}} // explicit 30fps
+    });
+    v.srcObject=s; await v.play();
+    document.getElementById('wc').style.display='block';
+    await initHandTracking(v);
+  } catch(e){
+    console.warn('Cam denied:',e);
+    document.getElementById('gl').textContent='Camera denied';
+  }
+};
+document.getElementById('scb').onclick=()=>{
+  document.getElementById('cp').style.display='none';
+  // Enable mouse-based single influencer mode
+  for(let i=0;i<NUM_INFLUENCERS;i++) inf[i].active=true;
+  inf[0].type=1; inf[0].strength=1.5;
+  for(let i=1;i<NUM_INFLUENCERS;i++){ inf[i].active=false; }
+};
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────
+addEventListener('keydown',e=>{
+  if(e.key>='1'&&e.key<='9') morphTo(+e.key-1);
+  if(e.key==='0') morphTo(9);
+  if(e.key==='ArrowRight') morphTo((curTmpl+1)%TEMPLATES.length);
+  if(e.key==='ArrowLeft') morphTo((curTmpl-1+TEMPLATES.length)%TEMPLATES.length);
+  if(e.key.toLowerCase()==='f') toggleFS();
+  resetAutoTimer();
+});
+
+function toggleFS(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+}
+
+// ── AUTO-CYCLE ─────────────────────────────────────────────────────────────
+let autoTimer=null;
+function resetAutoTimer(){
+  clearTimeout(autoTimer);
+  autoTimer=setTimeout(()=>{ morphTo((curTmpl+1)%TEMPLATES.length); resetAutoTimer(); }, 14000);
+}
+addEventListener('click',resetAutoTimer);
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+addEventListener('load',()=>{
+  initThree();
+  buildUI();
+  animate();
+  resetAutoTimer();
+  setTimeout(()=>{
+    const lo=document.getElementById('lo');
+    lo.classList.add('h');
+    setTimeout(()=>lo.style.display='none', 900);
+    document.getElementById('cp').style.display='flex';
+  }, 1600);
+});
+</script>
+</body>
+</html>
